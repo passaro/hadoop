@@ -50,9 +50,6 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import org.apache.hadoop.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.awscore.AwsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 
 import software.amazon.awssdk.awscore.AwsRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;

@@ -168,7 +168,7 @@ public class RequestFactoryImpl implements RequestFactory {
    */
   // TODO: Currently this is a NOOP, will be completed separately as part of auditor work.
   @Retries.OnceRaw
-  private <T extends AwsRequest> T prepareV2Request(T t) {
+  private <T extends AwsRequest.Builder> T prepareV2Request(T t) {
     return t;
   }
 
@@ -276,7 +276,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public CopyObjectRequest newCopyObjectRequest(String srcKey,
+  public CopyObjectRequest.Builder newCopyObjectRequest(String srcKey,
       String dstKey,
       HeadObjectResponse srcom) {
 
@@ -298,10 +298,10 @@ public class RequestFactoryImpl implements RequestFactory {
       copyObjectRequestBuilder.storageClass(srcom.storageClass());
     }
 
-    CopyObjectRequest request = copyObjectRequestBuilder.destinationBucket(getBucket())
-        .destinationKey(dstKey).sourceBucket(getBucket()).sourceKey(srcKey).build();
+    copyObjectRequestBuilder.destinationBucket(getBucket())
+        .destinationKey(dstKey).sourceBucket(getBucket()).sourceKey(srcKey);
 
-    return prepareV2Request(request);
+    return prepareV2Request(copyObjectRequestBuilder);
   }
 
   /**
@@ -335,19 +335,22 @@ public class RequestFactoryImpl implements RequestFactory {
   /**
    * Create a putObject request.
    * Adds the ACL, storage class and metadata
-   * @param putObjectRequestBuilder putObject request builder
    * @param key key of object
    * @param options options for the request, including headers
-   * @return the request
+   * @param length length of object to be uploaded
+   * @param isDirectoryMarker true if object to be uploaded is a directory marker
+   * @return the request builder
    */
   @Override
-  public PutObjectRequest newPutObjectRequest(
-      PutObjectRequest.Builder putObjectRequestBuilder,
-      String key,
-      final PutObjectOptions options) {
+  public PutObjectRequest.Builder newPutObjectRequest(String key,
+      final PutObjectOptions options,
+      long length,
+      boolean isDirectoryMarker) {
 
     Preconditions.checkArgument(isNotEmpty(key), "Null/empty key");
 
+    PutObjectRequest.Builder putObjectRequestBuilder =
+        buildPutObjectRequest(length, isDirectoryMarker);
     putObjectRequestBuilder.bucket(getBucket()).key(key);
 
     if (options != null) {
@@ -365,11 +368,10 @@ public class RequestFactoryImpl implements RequestFactory {
       putObjectRequestBuilder.storageClass(storageClass.toString());
     }
 
-    return prepareV2Request(putObjectRequestBuilder.build());
+    return prepareV2Request(putObjectRequestBuilder);
   }
 
-  @Override
-  public PutObjectRequest.Builder buildPutObjectRequest(long length, boolean isDirectoryMarker) {
+  private PutObjectRequest.Builder buildPutObjectRequest(long length, boolean isDirectoryMarker) {
 
     PutObjectRequest.Builder putObjectRequestBuilder = PutObjectRequest.builder();
 
@@ -406,7 +408,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public PutObjectRequest newDirectoryMarkerRequest(String directory) {
+  public PutObjectRequest.Builder newDirectoryMarkerRequest(String directory) {
     String key = directory.endsWith("/")
         ? directory
         : (directory + "/");
@@ -414,17 +416,15 @@ public class RequestFactoryImpl implements RequestFactory {
     // preparation happens in here
     PutObjectRequest.Builder putObjectRequestBuilder = buildPutObjectRequest(0L, true);
 
-    putObjectRequestBuilder.contentType(HeaderProcessing.CONTENT_TYPE_X_DIRECTORY);
+    putObjectRequestBuilder.bucket(getBucket()).key(key)
+        .contentType(HeaderProcessing.CONTENT_TYPE_X_DIRECTORY);
 
     putEncryptionParameters(putObjectRequestBuilder);
     if(cannedACL != null) {
       putObjectRequestBuilder.acl(cannedACL.toString());
     }
 
-    PutObjectRequest putObjectRequest =
-        putObjectRequestBuilder.bucket(getBucket()).key(key).build();
-
-    return prepareV2Request(putObjectRequest);
+    return prepareV2Request(putObjectRequestBuilder);
   }
 
   @Override
@@ -479,7 +479,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public HeadObjectRequest newGetObjectMetadataRequest(String key) {
+  public HeadObjectRequest.Builder newGetObjectMetadataRequest(String key) {
 
     HeadObjectRequest.Builder headObjectRequestBuilder =
         HeadObjectRequest.builder().bucket(getBucket()).key(key);
@@ -491,7 +491,7 @@ public class RequestFactoryImpl implements RequestFactory {
           .sseCustomerKeyMD5(Md5Utils.md5AsBase64(Base64.getDecoder().decode(base64customerKey)));
     });
 
-    return prepareV2Request(headObjectRequestBuilder.build());
+    return prepareV2Request(headObjectRequestBuilder);
   }
 
   @Override
@@ -563,7 +563,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public ListObjectsRequest newListObjectsV1Request(
+  public ListObjectsRequest.Builder newListObjectsV1Request(
       final String key,
       final String delimiter,
       final int maxKeys) {
@@ -575,7 +575,7 @@ public class RequestFactoryImpl implements RequestFactory {
       requestBuilder.delimiter(delimiter);
     }
 
-    return prepareV2Request(requestBuilder.build());
+    return prepareV2Request(requestBuilder);
   }
 
   @Override
@@ -585,7 +585,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public ListObjectsV2Request newListObjectsV2Request(
+  public ListObjectsV2Request.Builder newListObjectsV2Request(
       final String key,
       final String delimiter,
       final int maxKeys) {
@@ -599,7 +599,7 @@ public class RequestFactoryImpl implements RequestFactory {
       requestBuilder.delimiter(delimiter);
     }
 
-    return prepareV2Request(requestBuilder.build());
+    return prepareV2Request(requestBuilder);
   }
 
   @Override

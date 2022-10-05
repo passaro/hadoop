@@ -109,13 +109,12 @@ public class ITestS3AMiscOperations extends AbstractS3ATestBase {
     final S3AFileSystem fs = getFileSystem();
     try (AuditSpan span = span()) {
       RequestFactory factory = RequestFactoryImpl.builder().withBucket(fs.getBucket()).build();
-      PutObjectRequest.Builder putObjectRequestBuilder = factory.buildPutObjectRequest(-1, false);
-      putObjectRequestBuilder.contentLength(-1L);
       Path path = path("putDirect");
-      PutObjectRequest putObjectRequest =
-          factory.newPutObjectRequest(putObjectRequestBuilder, path.toUri().getPath(), null);
+      PutObjectRequest.Builder putObjectRequestBuilder =
+          factory.newPutObjectRequest(path.toUri().getPath(), null, -1, false);
+      putObjectRequestBuilder.contentLength(-1L);
       LambdaTestUtils.intercept(IllegalStateException.class,
-          () -> fs.putObjectDirect(putObjectRequest, PutObjectOptions.keepingDirs(),
+          () -> fs.putObjectDirect(putObjectRequestBuilder.build(), PutObjectOptions.keepingDirs(),
               new S3ADataBlocks.BlockUploadData(new ByteArrayInputStream("PUT".getBytes())),
               false));
       assertPathDoesNotExist("put object was created", path);

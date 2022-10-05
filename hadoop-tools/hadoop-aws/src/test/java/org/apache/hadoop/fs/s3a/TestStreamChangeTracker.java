@@ -269,9 +269,9 @@ public class TestStreamChangeTracker extends HadoopTestBase {
   }
 
   protected void assertConstraintApplied(final ChangeTracker tracker,
-      final CopyObjectRequest request) throws PathIOException {
+      final CopyObjectRequest.Builder requestBuilder) throws PathIOException {
     assertTrue("Tracker should have applied contraints " + tracker,
-        tracker.maybeApplyConstraint(request));
+        tracker.maybeApplyConstraint(requestBuilder));
   }
 
   protected RemoteFileChangedException expectChangeException(
@@ -401,9 +401,9 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     return new GetObjectRequest(BUCKET, OBJECT);
   }
 
-  private CopyObjectRequest newCopyObjectRequest() {
+  private CopyObjectRequest.Builder newCopyObjectRequest() {
     return CopyObjectRequest.builder().sourceBucket(BUCKET).sourceKey(OBJECT)
-        .destinationBucket(BUCKET).destinationKey(DEST_OBJECT).build();
+        .destinationBucket(BUCKET).destinationKey(DEST_OBJECT);
   }
 
   private CopyObjectResponse newCopyResult(String eTag, String versionId) {

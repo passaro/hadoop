@@ -91,16 +91,14 @@ public class TestRequestFactory extends AbstractHadoopTestBase {
     String path2 = "path2";
     HeadObjectResponse md = HeadObjectResponse.builder().contentLength(128L).build();
 
-    PutObjectRequest.Builder putObjectRequestBuilder =
-        factory.buildPutObjectRequest(128, false);
     // TODO: When updating MPU, remove toString() from ACLs, instead use V2's ObjectCannedACL
-    Assertions.assertThat(
-            factory.newPutObjectRequest(putObjectRequestBuilder, path,
-                    null)
-                .aclAsString())
+    Assertions.assertThat(factory.newPutObjectRequest(path, null, 128, false)
+            .build()
+            .aclAsString())
         .describedAs("ACL of PUT")
         .isEqualTo(acl.toString());
     Assertions.assertThat(factory.newCopyObjectRequest(path, path2, md)
+            .build()
             .aclAsString())
         .describedAs("ACL of COPY")
         .isEqualTo(acl.toString());

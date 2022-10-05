@@ -255,14 +255,13 @@ public class ITestS3ADirectoryPerformance extends S3AScaleTestBase {
       for (int i=0; i<numOfPutRequests; i++) {
         Path file = new Path(dir, String.format("file-%03d", i));
         originalListOfFiles.add(file.toString());
-        PutObjectRequest.Builder putObjectRequestBuilder =
-            requestFactory.buildPutObjectRequest(128, false);
-        PutObjectRequest put = requestFactory
-            .newPutObjectRequest(putObjectRequestBuilder, fs.pathToKey(file),
-                null);
-        futures.add(submit(executorService, () -> writeOperationHelper.putObject(put,
-            PutObjectOptions.keepingDirs(),
-            new S3ADataBlocks.BlockUploadData(new FailingInputStream()), false)));
+        PutObjectRequest.Builder putObjectRequestBuilder = requestFactory
+            .newPutObjectRequest(fs.pathToKey(file),
+                null, 128, false);
+        futures.add(submit(executorService,
+            () -> writeOperationHelper.putObject(putObjectRequestBuilder.build(),
+                PutObjectOptions.keepingDirs(),
+                new S3ADataBlocks.BlockUploadData(new FailingInputStream()), false)));
       }
       LOG.info("Waiting for PUTs to complete");
       waitForCompletion(futures);

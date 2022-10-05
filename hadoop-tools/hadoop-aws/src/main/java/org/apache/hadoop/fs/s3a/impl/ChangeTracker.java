@@ -135,26 +135,26 @@ public class ChangeTracker {
   /**
    * Apply any revision control set by the policy if it is to be
    * enforced on the server.
-   * @param request request to modify
+   * @param requestBuilder copy object request builder to modify
    * @return true iff a constraint was added.
    */
   public boolean maybeApplyConstraint(
-      final CopyObjectRequest request) {
+      final CopyObjectRequest.Builder requestBuilder) {
 
     if (policy.getMode() == ChangeDetectionPolicy.Mode.Server
         && revisionId != null) {
-      policy.applyRevisionConstraint(request, revisionId);
+      policy.applyRevisionConstraint(requestBuilder, revisionId);
       return true;
     }
     return false;
   }
 
   public boolean maybeApplyConstraint(
-      final HeadObjectRequest request) {
+      final HeadObjectRequest.Builder requestBuilder) {
 
     if (policy.getMode() == ChangeDetectionPolicy.Mode.Server
         && revisionId != null) {
-      policy.applyRevisionConstraint(request, revisionId);
+      policy.applyRevisionConstraint(requestBuilder, revisionId);
       return true;
     }
     return false;

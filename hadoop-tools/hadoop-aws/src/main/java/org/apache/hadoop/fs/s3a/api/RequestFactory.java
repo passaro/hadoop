@@ -116,23 +116,15 @@ public interface RequestFactory {
   StorageClass getStorageClass();
 
   /**
-   * Create a putObject request builder.
-   * @param length length of object to be uploaded
-   * @param isDirectoryMarker true if object to be uploaded is a directory marker
-   * @return putObjectRequest builder
-   */
-  PutObjectRequest.Builder buildPutObjectRequest(long length, boolean isDirectoryMarker);
-
-  /**
    * Create a copy request.
    * This includes the work of copying the relevant parts
    * of the metadata from the source
    * @param srcKey source
    * @param dstKey destination
    * @param srcom source object metadata.
-   * @return the request
+   * @return the request builder
    */
-  CopyObjectRequest newCopyObjectRequest(String srcKey,
+  CopyObjectRequest.Builder newCopyObjectRequest(String srcKey,
       String dstKey,
       HeadObjectResponse srcom);
 
@@ -141,23 +133,25 @@ public interface RequestFactory {
    * Create a {@link PutObjectRequest} request.
    * The metadata is assumed to have been configured with the size of the
    * operation.
-   * @param putObjectRequestBuilder putObject request builder
    * @param key key of object
    * @param options options for the request
-   * @return the request
+   * @param length length of object to be uploaded
+   * @param isDirectoryMarker true if object to be uploaded is a directory marker
+   * @return the request builder
    */
-  PutObjectRequest newPutObjectRequest(PutObjectRequest.Builder putObjectRequestBuilder,
-      String key,
-      PutObjectOptions options);
+  PutObjectRequest.Builder newPutObjectRequest(String key,
+      PutObjectOptions options,
+      long length,
+      boolean isDirectoryMarker);
 
   /**
    * Create a {@link PutObjectRequest} request for creating
    * an empty directory.
    *
    * @param directory destination directory.
-   * @return request for a zero byte upload.
+   * @return request builder for a zero byte upload.
    */
-  PutObjectRequest newDirectoryMarkerRequest(String directory);
+  PutObjectRequest.Builder newDirectoryMarkerRequest(String directory);
 
   /**
    * List all multipart uploads under a prefix.
@@ -202,9 +196,9 @@ public interface RequestFactory {
   /**
    * Create a HEAD request.
    * @param key key, may have trailing /
-   * @return the request.
+   * @return the request builder.
    */
-  HeadObjectRequest newGetObjectMetadataRequest(String key);
+  HeadObjectRequest.Builder newGetObjectMetadataRequest(String key);
 
 
   /**
@@ -253,9 +247,9 @@ public interface RequestFactory {
    * @param key key to list under
    * @param delimiter delimiter for keys
    * @param maxKeys maximum number in a list page.
-   * @return the request
+   * @return the request builder.
    */
-  ListObjectsRequest newListObjectsV1Request(String key,
+  ListObjectsRequest.Builder newListObjectsV1Request(String key,
       String delimiter,
       int maxKeys);
 
@@ -275,9 +269,9 @@ public interface RequestFactory {
    * @param key key to list under
    * @param delimiter delimiter for keys
    * @param maxKeys maximum number in a list page.
-   * @return the request
+   * @return the request builder.
    */
-  ListObjectsV2Request newListObjectsV2Request(String key,
+  ListObjectsV2Request.Builder newListObjectsV2Request(String key,
       String delimiter,
       int maxKeys);
 

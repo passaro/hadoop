@@ -2636,16 +2636,17 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
       String operation) throws IOException {
     HeadObjectResponse response = changeInvoker.retryUntranslated("GET " + key, true,
         () -> {
-          HeadObjectRequest request = getRequestFactory().newGetObjectMetadataRequest(key);
+          HeadObjectRequest.Builder requestBuilder =
+              getRequestFactory().newGetObjectMetadataRequest(key);
           incrementStatistic(OBJECT_METADATA_REQUESTS);
           DurationTracker duration = getDurationTrackerFactory()
               .trackDuration(ACTION_HTTP_HEAD_REQUEST.getSymbol());
           try {
             LOG.debug("HEAD {} with change tracker {}", key, changeTracker);
             if (changeTracker != null) {
-              changeTracker.maybeApplyConstraint(request);
+              changeTracker.maybeApplyConstraint(requestBuilder);
             }
-            HeadObjectResponse headObjectResponse = s3V2.headObject(request);
+            HeadObjectResponse headObjectResponse = s3V2.headObject(requestBuilder.build());
             if (changeTracker != null) {
               changeTracker.processMetadata(headObjectResponse, operation);
             }
@@ -2907,21 +2908,14 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
    * Create a putObject request.
    * Adds the ACL and metadata
    * @param key key of object
-   * @param putObjectRequestBuilder builder for putObjectRequest
+   * @param length length of object to be uploaded
+   * @param isDirectoryMarker true if object to be uploaded is a directory marker
    * @return the request
    */
-  public PutObjectRequest newPutObjectRequest(String key,
-      PutObjectRequest.Builder putObjectRequestBuilder) {
-    return requestFactory.newPutObjectRequest(putObjectRequestBuilder, key, null);
-  }
-
-  /**
-   * Creates a putObject request builder.
-   * @param length length of data to be uploaded
-   * @return the request builder
-   */
-  public PutObjectRequest.Builder buildPutObjectRequest(long length) {
-    return requestFactory.buildPutObjectRequest(length, false);
+  public PutObjectRequest.Builder newPutObjectRequest(String key,
+      long length,
+      boolean isDirectoryMarker) {
+    return requestFactory.newPutObjectRequest(key, null, length, isDirectoryMarker);
   }
 
   /**
@@ -3423,15 +3417,15 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
   private S3ListRequest createListObjectsRequest(String key,
       String delimiter, int limit) {
     if (!useListV1) {
-      ListObjectsV2Request request =
+      ListObjectsV2Request.Builder requestBuilder =
           getRequestFactory().newListObjectsV2Request(
               key, delimiter, limit);
-      return S3ListRequest.v2(request);
+      return S3ListRequest.v2(requestBuilder.build());
     } else {
-      ListObjectsRequest request =
+      ListObjectsRequest.Builder requestBuilder =
           getRequestFactory().newListObjectsV1Request(
               key, delimiter, limit);
-      return S3ListRequest.v1(request);
+      return S3ListRequest.v1(requestBuilder.build());
     }
   }
 
@@ -3899,15 +3893,12 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
           to,
           () -> {
             final String key = pathToKey(to);
-            final PutObjectRequest.Builder putObjectRequestBuilder =
-                buildPutObjectRequest(file.length());
             Progressable progress = null;
-            PutObjectRequest putObjectRequest =
-                newPutObjectRequest(key, putObjectRequestBuilder);
-            S3AFileSystem.this.invoker.retry(
-                "putObject(" + "" + ")", to.toString(),
-                true,
-                () -> executePut(putObjectRequest, progress, putOptionsForPath(to), file));
+            PutObjectRequest.Builder putObjectRequestBuilder =
+                newPutObjectRequest(key, file.length(), false);
+            S3AFileSystem.this.invoker.retry("putObject(" + "" + ")", to.toString(), true,
+                () -> executePut(putObjectRequestBuilder.build(), progress, putOptionsForPath(to),
+                    file));
 
             return null;
           });
@@ -4304,13 +4295,13 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         action, srcKey,
         true,
         () -> {
-          CopyObjectRequest copyObjectRequest =
+          CopyObjectRequest.Builder copyObjectRequestBuilder =
               getRequestFactory().newCopyObjectRequest(srcKey, dstKey, srcom);
-          changeTracker.maybeApplyConstraint(copyObjectRequest);
+          changeTracker.maybeApplyConstraint(copyObjectRequestBuilder);
           incrementStatistic(OBJECT_COPY_REQUESTS);
 
           Copy copy = transferManagerV2.copy(
-              CopyRequest.builder().copyObjectRequest(copyObjectRequest).build());
+              CopyRequest.builder().copyObjectRequest(copyObjectRequestBuilder.build()).build());
 
           CompletedCopy completedCopy = copy.completionFuture().join();
 
@@ -4482,10 +4473,9 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
 
     S3ADataBlocks.BlockUploadData uploadData = new S3ADataBlocks.BlockUploadData(im);
 
-    invoker.retry("PUT 0-byte object ", objectName,
-         true, () ->
-            putObjectDirect(getRequestFactory()
-                .newDirectoryMarkerRequest(objectName), putOptions, uploadData, false));
+    invoker.retry("PUT 0-byte object ", objectName, true,
+        () -> putObjectDirect(getRequestFactory().newDirectoryMarkerRequest(objectName).build(),
+            putOptions, uploadData, false));
     incrementPutProgressStatistics(objectName, 0);
     instrumentation.directoryCreated();
   }

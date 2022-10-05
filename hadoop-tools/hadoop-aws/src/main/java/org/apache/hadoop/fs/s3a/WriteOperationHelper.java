@@ -255,13 +255,10 @@ public class WriteOperationHelper implements WriteOperations {
     }
 
     activateAuditSpan();
-    PutObjectRequest.Builder putObjectRequestBuilder =
-        getRequestFactory().buildPutObjectRequest(length, false);
 
-    return getRequestFactory().newPutObjectRequest(
-        putObjectRequestBuilder,
-        destKey,
-        options);
+    return getRequestFactory()
+        .newPutObjectRequest(destKey, options, length, false)
+        .build();
   }
 
 

@@ -251,20 +251,20 @@ public abstract class ChangeDetectionPolicy {
    * Applies the given {@link #getRevisionId(HeadObjectResponse, String) revisionId}
    * as a server-side qualification on the {@code CopyObjectRequest}.
    *
-   * @param request the request
+   * @param requestBuilder the copy object request builder
    * @param revisionId the revision id
    */
-  public abstract void applyRevisionConstraint(CopyObjectRequest request,
+  public abstract void applyRevisionConstraint(CopyObjectRequest.Builder requestBuilder,
       String revisionId);
 
   /**
    * Applies the given {@link #getRevisionId(HeadObjectResponse, String) revisionId}
    * as a server-side qualification on the {@code GetObjectMetadataRequest}.
    *
-   * @param request the request
+   * @param requestBuilder the head object request builder
    * @param revisionId the revision id
    */
-  public abstract void applyRevisionConstraint(HeadObjectRequest request,
+  public abstract void applyRevisionConstraint(HeadObjectRequest.Builder requestBuilder,
       String revisionId);
 
   /**
@@ -359,18 +359,18 @@ public abstract class ChangeDetectionPolicy {
     }
 
     @Override
-    public void applyRevisionConstraint(CopyObjectRequest request,
+    public void applyRevisionConstraint(CopyObjectRequest.Builder requestBuilder,
         String revisionId) {
       if (revisionId != null) {
         LOG.debug("Restricting copy request to etag {}", revisionId);
-        request.toBuilder().copySourceIfMatch(revisionId);
+        requestBuilder.copySourceIfMatch(revisionId);
       } else {
         LOG.debug("No etag revision ID to use as a constraint");
       }
     }
 
     @Override
-    public void applyRevisionConstraint(HeadObjectRequest request,
+    public void applyRevisionConstraint(HeadObjectRequest.Builder requestBuilder,
         String revisionId) {
       LOG.debug("Unable to restrict HEAD request to etag; will check later");
     }
@@ -436,22 +436,22 @@ public abstract class ChangeDetectionPolicy {
     }
 
     @Override
-    public void applyRevisionConstraint(CopyObjectRequest request,
+    public void applyRevisionConstraint(CopyObjectRequest.Builder requestBuilder,
         String revisionId) {
       if (revisionId != null) {
         LOG.debug("Restricting copy request to version {}", revisionId);
-        request.toBuilder().sourceVersionId(revisionId);
+        requestBuilder.sourceVersionId(revisionId);
       } else {
         LOG.debug("No version ID to use as a constraint");
       }
     }
 
     @Override
-    public void applyRevisionConstraint(HeadObjectRequest request,
+    public void applyRevisionConstraint(HeadObjectRequest.Builder requestBuilder,
         String revisionId) {
       if (revisionId != null) {
         LOG.debug("Restricting metadata request to version {}", revisionId);
-        request.toBuilder().versionId(revisionId).build();
+        requestBuilder.versionId(revisionId).build();
       } else {
         LOG.debug("No version ID to use as a constraint");
       }
@@ -505,13 +505,13 @@ public abstract class ChangeDetectionPolicy {
     }
 
     @Override
-    public void applyRevisionConstraint(CopyObjectRequest request,
+    public void applyRevisionConstraint(CopyObjectRequest.Builder requestBuilder,
         String revisionId) {
 
     }
 
     @Override
-    public void applyRevisionConstraint(HeadObjectRequest request,
+    public void applyRevisionConstraint(HeadObjectRequest.Builder requestBuilder,
         String revisionId) {
 
     }

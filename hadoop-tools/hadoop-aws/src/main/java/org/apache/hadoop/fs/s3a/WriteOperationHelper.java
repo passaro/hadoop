@@ -257,7 +257,7 @@ public class WriteOperationHelper implements WriteOperations {
     activateAuditSpan();
 
     return getRequestFactory()
-        .newPutObjectRequest(destKey, options, length, false)
+        .newPutObjectRequestBuilder(destKey, options, length, false)
         .build();
   }
 

@@ -319,8 +319,8 @@ public class HeaderProcessing extends AbstractStoreOperation {
     // TODO: Add back in else block during CSE work.
     maybeSetHeader(headers, XA_CONTENT_LENGTH,
         md.contentLength());
-//    maybeSetHeader(headers, XA_CONTENT_RANGE,
-//        md.sdkHttpResponse().headers().get("Content-Range"));
+    maybeSetHeader(headers, XA_CONTENT_RANGE,
+        md.sdkHttpResponse().headers().get("Content-Range"));
     maybeSetHeader(headers, XA_CONTENT_TYPE,
         md.contentType());
     maybeSetHeader(headers, XA_ETAG,

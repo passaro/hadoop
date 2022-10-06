@@ -116,7 +116,7 @@ public interface RequestFactory {
   StorageClass getStorageClass();
 
   /**
-   * Create a copy request.
+   * Create a copy request builder.
    * This includes the work of copying the relevant parts
    * of the metadata from the source
    * @param srcKey source
@@ -124,13 +124,13 @@ public interface RequestFactory {
    * @param srcom source object metadata.
    * @return the request builder
    */
-  CopyObjectRequest.Builder newCopyObjectRequest(String srcKey,
+  CopyObjectRequest.Builder newCopyObjectRequestBuilder(String srcKey,
       String dstKey,
       HeadObjectResponse srcom);
 
 
   /**
-   * Create a {@link PutObjectRequest} request.
+   * Create a {@link PutObjectRequest} request builder.
    * The metadata is assumed to have been configured with the size of the
    * operation.
    * @param key key of object
@@ -139,7 +139,7 @@ public interface RequestFactory {
    * @param isDirectoryMarker true if object to be uploaded is a directory marker
    * @return the request builder
    */
-  PutObjectRequest.Builder newPutObjectRequest(String key,
+  PutObjectRequest.Builder newPutObjectRequestBuilder(String key,
       PutObjectOptions options,
       long length,
       boolean isDirectoryMarker);
@@ -194,11 +194,11 @@ public interface RequestFactory {
       List<PartETag> partETags);
 
   /**
-   * Create a HEAD request.
+   * Create a HEAD request builder.
    * @param key key, may have trailing /
    * @return the request builder.
    */
-  HeadObjectRequest.Builder newGetObjectMetadataRequest(String key);
+  HeadObjectRequest.Builder newHeadObjectRequestBuilder(String key);
 
 
   /**
@@ -243,13 +243,13 @@ public interface RequestFactory {
   SelectObjectContentRequest newSelectRequest(String key);
 
   /**
-   * Create the (legacy) V1 list request.
+   * Create the (legacy) V1 list request builder.
    * @param key key to list under
    * @param delimiter delimiter for keys
    * @param maxKeys maximum number in a list page.
    * @return the request builder.
    */
-  ListObjectsRequest.Builder newListObjectsV1Request(String key,
+  ListObjectsRequest.Builder newListObjectsV1RequestBuilder(String key,
       String delimiter,
       int maxKeys);
 
@@ -264,14 +264,14 @@ public interface RequestFactory {
       ObjectListing prev);
 
   /**
-   * Create a V2 list request.
+   * Create a V2 list request builder.
    * This will be recycled for any subsequent requests.
    * @param key key to list under
    * @param delimiter delimiter for keys
    * @param maxKeys maximum number in a list page.
    * @return the request builder.
    */
-  ListObjectsV2Request.Builder newListObjectsV2Request(String key,
+  ListObjectsV2Request.Builder newListObjectsV2RequestBuilder(String key,
       String delimiter,
       int maxKeys);
 

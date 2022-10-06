@@ -276,7 +276,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public CopyObjectRequest.Builder newCopyObjectRequest(String srcKey,
+  public CopyObjectRequest.Builder newCopyObjectRequestBuilder(String srcKey,
       String dstKey,
       HeadObjectResponse srcom) {
 
@@ -342,7 +342,7 @@ public class RequestFactoryImpl implements RequestFactory {
    * @return the request builder
    */
   @Override
-  public PutObjectRequest.Builder newPutObjectRequest(String key,
+  public PutObjectRequest.Builder newPutObjectRequestBuilder(String key,
       final PutObjectOptions options,
       long length,
       boolean isDirectoryMarker) {
@@ -479,7 +479,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public HeadObjectRequest.Builder newGetObjectMetadataRequest(String key) {
+  public HeadObjectRequest.Builder newHeadObjectRequestBuilder(String key) {
 
     HeadObjectRequest.Builder headObjectRequestBuilder =
         HeadObjectRequest.builder().bucket(getBucket()).key(key);
@@ -563,7 +563,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public ListObjectsRequest.Builder newListObjectsV1Request(
+  public ListObjectsRequest.Builder newListObjectsV1RequestBuilder(
       final String key,
       final String delimiter,
       final int maxKeys) {
@@ -585,7 +585,7 @@ public class RequestFactoryImpl implements RequestFactory {
   }
 
   @Override
-  public ListObjectsV2Request.Builder newListObjectsV2Request(
+  public ListObjectsV2Request.Builder newListObjectsV2RequestBuilder(
       final String key,
       final String delimiter,
       final int maxKeys) {

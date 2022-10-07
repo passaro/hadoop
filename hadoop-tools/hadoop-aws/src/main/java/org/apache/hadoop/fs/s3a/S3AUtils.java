@@ -1941,6 +1941,6 @@ public final class S3AUtils {
    * @return a formatted byte range
    */
   public static String formatRange(long rangeStart, long rangeEnd) {
-    return String.format("bytes={}-{}", rangeStart, rangeEnd);
+    return String.format("bytes=%d-%d", rangeStart, rangeEnd);
   }
 }

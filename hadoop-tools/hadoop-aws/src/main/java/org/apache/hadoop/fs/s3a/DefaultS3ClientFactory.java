@@ -259,6 +259,7 @@ public class DefaultS3ClientFactory extends Configured
     s3ClientBuilder.endpointOverride(endpoint).region(region);
 
     S3Configuration s3Configuration = S3Configuration.builder()
+        .useArnRegionEnabled(true)
         .pathStyleAccessEnabled(parameters.isPathStyleAccess())
         .build();
 

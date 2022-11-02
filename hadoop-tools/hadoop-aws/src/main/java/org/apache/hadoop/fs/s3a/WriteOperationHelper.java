@@ -680,8 +680,8 @@ public class WriteOperationHelper implements WriteOperations {
           try (DurationInfo ignored =
                    new DurationInfo(LOG, "S3 Select operation")) {
             try {
-              SelectObjectContentHelper helper = new SelectObjectContentHelper();
-              return helper.select(writeOperationHelperCallbacks, source, request, action);
+              return SelectObjectContentHelper.select(
+                  writeOperationHelperCallbacks, source, request, action);
             } catch (Throwable e) {
               LOG.error("Failure of S3 Select request against {}",
                   source);

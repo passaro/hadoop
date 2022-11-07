@@ -289,6 +289,11 @@ public class DefaultS3ClientFactory extends Configured
       }
     }
 
+    if (parameters.getMetrics() != null) {
+      clientOverrideConfigBuilder.addMetricPublisher(
+          new AwsStatisticsCollector(parameters.getMetrics()));
+    }
+
     final RetryPolicy.Builder retryPolicyBuilder = AWSClientConfig.createRetryPolicyBuilder(conf);
     clientOverrideConfigBuilder.retryPolicy(retryPolicyBuilder.build());
 
@@ -390,10 +395,6 @@ public class DefaultS3ClientFactory extends Configured
     builder.withClientConfiguration(awsConf);
     builder.withPathStyleAccessEnabled(parameters.isPathStyleAccess());
 
-    if (parameters.getMetrics() != null) {
-      builder.withMetricsCollector(
-          new AwsStatisticsCollector(parameters.getMetrics()));
-    }
     if (parameters.getMonitoringListener() != null) {
       builder.withMonitoringListener(parameters.getMonitoringListener());
     }

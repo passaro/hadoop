@@ -22,9 +22,6 @@ import java.util.concurrent.CompletableFuture;
 
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadResponse;
-import software.amazon.awssdk.services.s3.model.SelectObjectContentRequest;
-import software.amazon.awssdk.services.s3.model.SelectObjectContentResponse;
-import software.amazon.awssdk.services.s3.model.SelectObjectContentResponseHandler;
 
 import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.apache.hadoop.fs.s3a.WriteOperationHelper;
@@ -34,13 +31,6 @@ import org.apache.hadoop.fs.s3a.WriteOperationHelper;
  */
 public class MinimalWriteOperationHelperCallbacks
     implements WriteOperationHelper.WriteOperationHelperCallbacks {
-
-  @Override
-  public CompletableFuture<Void> selectObjectContent(
-      SelectObjectContentRequest request,
-      SelectObjectContentResponseHandler th) {
-    return null;
-  }
 
   @Override
   public CompleteMultipartUploadResponse completeMultipartUpload(

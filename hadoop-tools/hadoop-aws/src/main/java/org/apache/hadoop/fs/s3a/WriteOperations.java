@@ -285,32 +285,6 @@ public interface WriteOperations extends AuditSpanSource, Closeable {
   Configuration getConf();
 
   /**
-   * Create a S3 Select request builder for the destination path.
-   * This does not build the query.
-   * @param path pre-qualified path for query
-   * @return the request builder
-   */
-  SelectObjectContentRequest.Builder newSelectRequestBuilder(Path path);
-
-  /**
-   * Execute an S3 Select operation.
-   * On a failure, the request is only logged at debug to avoid the
-   * select exception being printed.
-   *
-   * @param source  source for selection
-   * @param request Select request to issue.
-   * @param action  the action for use in exception creation
-   * @return response
-   * @throws IOException failure
-   */
-  @Retries.RetryTranslated
-  SelectEventStreamPublisher select(
-      Path source,
-      SelectObjectContentRequest request,
-      String action)
-      throws IOException;
-
-  /**
    * Increment the write operation counter
    * of the filesystem.
    */

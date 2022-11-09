@@ -147,6 +147,7 @@ import org.apache.hadoop.fs.s3a.impl.StoreContext;
 import org.apache.hadoop.fs.s3a.impl.StoreContextBuilder;
 import org.apache.hadoop.fs.s3a.impl.V2Migration;
 import org.apache.hadoop.fs.s3a.prefetch.S3APrefetchingInputStream;
+import org.apache.hadoop.fs.s3a.select.SelectObjectContentHelper;
 import org.apache.hadoop.fs.s3a.tools.MarkerToolOperations;
 import org.apache.hadoop.fs.s3a.tools.MarkerToolOperationsImpl;
 import org.apache.hadoop.fs.statistics.DurationTracker;
@@ -1691,17 +1692,23 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
   }
 
   /**
+   * Callbacks for SelectObjectContentHelper.
+   */
+  private final class SelectObjectContentHelperCallbacksImpl
+      implements SelectObjectContentHelper.SelectObjectContentHelperCallbacks {
+
+    @Override
+    public CompletableFuture<Void> selectObjectContent(SelectObjectContentRequest request,
+        SelectObjectContentResponseHandler responseHandler) {
+      return s3AsyncClient.selectObjectContent(request, responseHandler);
+    }
+  }
+
+  /**
    * Callbacks for WriteOperationHelper.
    */
   private final class WriteOperationHelperCallbacksImpl
       implements WriteOperationHelper.WriteOperationHelperCallbacks {
-
-    @Override
-    public CompletableFuture<Void> selectObjectContent(
-        SelectObjectContentRequest request,
-        SelectObjectContentResponseHandler responseHandler) {
-     return s3AsyncClient.selectObjectContent(request, responseHandler);
-    }
 
     @Override
     public CompleteMultipartUploadResponse completeMultipartUpload(
@@ -1936,6 +1943,21 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         getAuditSpanSource(),
         auditSpan,
         new WriteOperationHelperCallbacksImpl());
+  }
+
+  /**
+   * Create a SelectObjectContent Helper with the given span.
+   * Select calls made through this helper will activate the
+   * span before execution.
+   * @param auditSpan audit span
+   * @return a new helper.
+   */
+  @InterfaceAudience.Private
+  public SelectObjectContentHelper createSelectObjectContentHelper(AuditSpan auditSpan) {
+    return new SelectObjectContentHelper(this,
+        getConf(),
+        auditSpan,
+        new SelectObjectContentHelperCallbacksImpl());
   }
 
   /**
@@ -5288,7 +5310,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
     // instantiate S3 Select support using the current span
     // as the active span for operations.
     SelectBinding selectBinding = new SelectBinding(
-        createWriteOperationHelper(auditSpan));
+        createSelectObjectContentHelper(auditSpan));
 
     // build and execute the request
     return selectBinding.select(

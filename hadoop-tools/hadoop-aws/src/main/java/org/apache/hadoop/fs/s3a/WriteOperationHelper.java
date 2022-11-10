@@ -36,8 +36,6 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.MultipartUpload;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.model.SelectObjectContentRequest;
-import software.amazon.awssdk.services.s3.model.SelectObjectContentResponseHandler;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 
@@ -635,66 +633,6 @@ public class WriteOperationHelper implements WriteOperations {
     return conf;
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public SelectObjectContentRequest.Builder newSelectRequestBuilder(Path path) {
-    try (AuditSpan span = getAuditSpan()) {
-      return getRequestFactory().newSelectRequestBuilder(
-          storeContext.pathToKey(path));
-    }
-  }
-
-  /**
-   * Execute an S3 Select operation.
-   * On a failure, the request is only logged at debug to avoid the
-   * select exception being printed.
-   *
-   * @param source  source for selection
-   * @param request Select request to issue.
-   * @param action  the action for use in exception creation
-   * @return response
-   * @throws IOException failure
-   */
-  @Retries.RetryTranslated
-  public SelectEventStreamPublisher select(
-      final Path source,
-      final SelectObjectContentRequest request,
-      final String action)
-      throws IOException {
-    // no setting of span here as the select binding is (statically) created
-    // without any span.
-    String bucketName = request.bucket();
-    Preconditions.checkArgument(bucket.equals(bucketName),
-        "wrong bucket: %s", bucketName);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Initiating select call {} {}",
-          source, request.expression());
-      LOG.debug(SelectBinding.toString(request));
-    }
-    return invoker.retry(
-        action,
-        source.toString(),
-        true,
-        withinAuditSpan(getAuditSpan(), () -> {
-          try (DurationInfo ignored =
-                   new DurationInfo(LOG, "S3 Select operation")) {
-            try {
-              return SelectObjectContentHelper.select(
-                  writeOperationHelperCallbacks, source, request, action);
-            } catch (Throwable e) {
-              LOG.error("Failure of S3 Select request against {}",
-                  source);
-              LOG.debug("S3 Select request against {}:\n{}",
-                  source,
-                  SelectBinding.toString(request),
-                  e);
-              throw e;
-            }
-          }
-        }));
-  }
-
   @Override
   public AuditSpan createSpan(final String operation,
       @Nullable final String path1,
@@ -727,13 +665,6 @@ public class WriteOperationHelper implements WriteOperations {
    * Callbacks for writeOperationHelper.
    */
   public interface WriteOperationHelperCallbacks {
-
-    /**
-     * Initiates a select request.
-     * @param request selectObjectContent request
-     * @return selectObjectContentResult
-     */
-    CompletableFuture<Void> selectObjectContent(SelectObjectContentRequest request, SelectObjectContentResponseHandler t);
 
     /**
      * Initiates a complete multi-part upload request.

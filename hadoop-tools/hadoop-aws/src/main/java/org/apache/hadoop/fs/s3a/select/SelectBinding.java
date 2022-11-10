@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.PathIOException;
 import org.apache.hadoop.fs.s3a.Retries;
 import org.apache.hadoop.fs.s3a.S3AReadOpContext;
 import org.apache.hadoop.fs.s3a.S3ObjectAttributes;
-import org.apache.hadoop.fs.s3a.WriteOperationHelper;
 
 import software.amazon.awssdk.services.s3.model.CSVInput;
 import software.amazon.awssdk.services.s3.model.CSVOutput;
@@ -62,7 +61,7 @@ public class SelectBinding {
       LoggerFactory.getLogger(SelectBinding.class);
 
   /** Operations on the store. */
-  private final WriteOperationHelper operations;
+  private final SelectObjectContentHelper selectObjectContentHelper;
 
   /** Is S3 Select enabled? */
   private final boolean enabled;
@@ -70,17 +69,17 @@ public class SelectBinding {
 
   /**
    * Constructor.
-   * @param operations callback to owner FS, with associated span.
+   * @param selectObjectContentHelper callback to owner FS, with associated span.
    */
-  public SelectBinding(final WriteOperationHelper operations) {
-    this.operations = checkNotNull(operations);
+  public SelectBinding(final SelectObjectContentHelper selectObjectContentHelper) {
+    this.selectObjectContentHelper = checkNotNull(selectObjectContentHelper);
     Configuration conf = getConf();
     this.enabled = isSelectEnabled(conf);
     this.errorsIncludeSql = conf.getBoolean(SELECT_ERRORS_INCLUDE_SQL, false);
   }
 
   Configuration getConf() {
-    return operations.getConf();
+    return selectObjectContentHelper.getConf();
   }
 
   /**
@@ -146,7 +145,7 @@ public class SelectBinding {
     Preconditions.checkState(isEnabled(),
         "S3 Select is not enabled for %s", path);
 
-    SelectObjectContentRequest.Builder request = operations.newSelectRequestBuilder(path);
+    SelectObjectContentRequest.Builder request = selectObjectContentHelper.newSelectRequestBuilder(path);
     buildRequest(request, expression, builderOptions);
     return request.build();
   }
@@ -181,7 +180,7 @@ public class SelectBinding {
     if (sqlInErrors) {
       LOG.info("Issuing SQL request {}", expression);
     }
-    SelectEventStreamPublisher selectPublisher = operations.select(path, request, errorText);
+    SelectEventStreamPublisher selectPublisher = selectObjectContentHelper.select(path, request, errorText);
     return new SelectInputStream(readContext,
         objectAttributes, selectPublisher);
   }
@@ -212,7 +211,7 @@ public class SelectBinding {
     Preconditions.checkArgument(StringUtils.isNotEmpty(expression),
         "No expression provided in parameter " + SELECT_SQL);
 
-    final Configuration ownerConf = operations.getConf();
+    final Configuration ownerConf = selectObjectContentHelper.getConf();
 
     String inputFormat = builderOptions.get(SELECT_INPUT_FORMAT,
         SELECT_FORMAT_CSV).toLowerCase(Locale.ENGLISH);

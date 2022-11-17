@@ -60,49 +60,69 @@ public class AwsStatisticsCollector implements MetricPublisher {
   /**
    * This is the callback from the AWS SDK where metrics
    * can be collected.
-   * @param request AWS request
-   * @param response AWS response
+   * @param metricCollection metrics collection
    */
   @Override
   public void publish(MetricCollection metricCollection) {
+    // MetricCollections are nested, so we need to traverse through their
+    // "children" to collect the desired metrics. E.g.:
+    //
+    // ApiCall
+    // ┌─────────────────────────────────────────┐
+    // │ MarshallingDuration=PT0.002808333S      │
+    // │ RetryCount=0                            │
+    // │ ApiCallSuccessful=true                  │
+    // │ OperationName=DeleteObject              │
+    // │ ApiCallDuration=PT0.079801458S          │
+    // │ CredentialsFetchDuration=PT0.000007083S │
+    // │ ServiceId=S3                            │
+    // └─────────────────────────────────────────┘
+    //     ApiCallAttempt
+    //     ┌─────────────────────────────────────────────────────────────────┐
+    //     │ SigningDuration=PT0.000319375S                                  │
+    //     │ ServiceCallDuration=PT0.078908584S                              │
+    //     │ AwsExtendedRequestId=Kmvb2Sz8NuDgIFJPKzLLBhuHgQGmpAjVYBMrSHDvy= │
+    //     │ HttpStatusCode=204                                              │
+    //     │ BackoffDelayDuration=PT0S                                       │
+    //     │ AwsRequestId=KR0XZCSX                                           │
+    //     └─────────────────────────────────────────────────────────────────┘
+    //         HttpClient
+    //         ┌─────────────────────────────────┐
+    //         │ AvailableConcurrency=1          │
+    //         │ LeasedConcurrency=0             │
+    //         │ ConcurrencyAcquireDuration=PT0S │
+    //         │ PendingConcurrencyAcquires=0    │
+    //         │ MaxConcurrency=96               │
+    //         │ HttpClientName=Apache           │
+    //         └─────────────────────────────────┘
+
     final long[] throttling = {0};
     recurseThroughChildren(metricCollection)
         .collect(Collectors.toList())
         .forEach(m -> {
       counter(m, CoreMetric.RETRY_COUNT, retries -> {
-        // Replaces com.amazonaws.util.AWSRequestMetrics.Field.HttpClientRetryCount
         collector.updateAwsRetryCount(retries);
-
-        // Replaces com.amazonaws.util.AWSRequestMetrics.Field.RequestCount (always HttpClientRetryCount+1)
         collector.updateAwsRequestCount(retries + 1);
       });
 
-      // TODO: confirm replacement
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.ThrottleException
       counter(m, HttpMetric.HTTP_STATUS_CODE, statusCode -> {
         if (statusCode == HttpStatusCode.THROTTLING) {
           throttling[0] += 1;
         }
       });
 
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.ClientExecuteTime
       timing(m, CoreMetric.API_CALL_DURATION,
           collector::noteAwsClientExecuteTime);
 
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.HttpRequestTime
       timing(m, CoreMetric.SERVICE_CALL_DURATION,
           collector::noteAwsRequestTime);
 
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.RequestMarshallTime
       timing(m, CoreMetric.MARSHALLING_DURATION,
           collector::noteRequestMarshallTime);
 
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.RequestSigningTime
       timing(m, CoreMetric.SIGNING_DURATION,
           collector::noteRequestSigningTime);
 
-      // TODO: confirm replacement
-      // Replaces com.amazonaws.util.AWSRequestMetrics.Field.ResponseProcessingTime
       timing(m, CoreMetric.UNMARSHALLING_DURATION,
           collector::noteResponseProcessingTime);
     });

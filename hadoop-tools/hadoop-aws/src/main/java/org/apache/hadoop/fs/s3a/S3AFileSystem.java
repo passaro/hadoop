@@ -4234,13 +4234,13 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
 
     // TODO: Transfer manager currently only provides transfer listeners for upload,
     //  add progress listener for copy when this is supported.
-// TODO: Is the above still valid? Try to enable when logger issue is resolved.
-//    TransferListener progressListener = new TransferListener() {
-//      @Override
-//      public void transferComplete(Context.TransferComplete context) {
-//        incrementWriteOperations();
-//      }
-//    };
+    TransferListener progressListener = new TransferListener() {
+      @Override
+      public void transferComplete(Context.TransferComplete context) {
+        incrementWriteOperations();
+        LOG.debug("copyFile({}, {}) transferComplete", srcKey, dstKey);
+      }
+    };
 
     ChangeTracker changeTracker = new ChangeTracker(
         keyToQualifiedPath(srcKey).toString(),
@@ -4284,10 +4284,9 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
           Copy copy = transferManager.copy(
               CopyRequest.builder()
                   .copyObjectRequest(copyObjectRequestBuilder.build())
-// TODO: Enable when logger issue is resolved.
-//                  .overrideConfiguration(c -> c
-//                      .addListener(getAuditManager().createTransferListener())
-//                      .addListener(progressListener))
+                  .overrideConfiguration(c -> c
+                      .addListener(getAuditManager().createTransferListener())
+                      .addListener(progressListener))
                   .build());
 
           try {

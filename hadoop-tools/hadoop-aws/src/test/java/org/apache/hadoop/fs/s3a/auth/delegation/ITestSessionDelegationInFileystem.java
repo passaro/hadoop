@@ -26,13 +26,14 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadBucketResponse;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -323,7 +324,6 @@ public class ITestSessionDelegationInFileystem extends AbstractDelegationIT {
    * Create a FS with a delegated token, verify it works as a filesystem,
    * and that you can pick up the same DT from that FS too.
    */
-  @SuppressWarnings("deprecation")
   @Test
   public void testDelegatedFileSystem() throws Throwable {
     describe("Delegation tokens can be passed to a new filesystem;"
@@ -580,8 +580,7 @@ public class ITestSessionDelegationInFileystem extends AbstractDelegationIT {
    * @return result of the HEAD
    * @throws Exception failure
    */
-  @SuppressWarnings("deprecation")
-  protected ObjectMetadata readLandsatMetadata(final S3AFileSystem delegatedFS)
+  protected HeadBucketResponse readLandsatMetadata(final S3AFileSystem delegatedFS)
       throws Exception {
     AWSCredentialProviderList testingCreds
         = delegatedFS.shareCredentials("testing");
@@ -599,10 +598,10 @@ public class ITestSessionDelegationInFileystem extends AbstractDelegationIT {
         .withMetrics(new EmptyS3AStatisticsContext()
             .newStatisticsFromAwsSdk())
         .withUserAgentSuffix("ITestSessionDelegationInFileystem");
-    AmazonS3 s3 = factory.createS3Client(landsat, parameters);
+    S3Client s3 = factory.createS3ClientV2(landsat, parameters);
 
     return Invoker.once("HEAD", host,
-        () -> s3.getObjectMetadata(host, landsat.getPath().substring(1)));
+        () -> s3.headBucket(b -> b.bucket(host)));
   }
 
   /**

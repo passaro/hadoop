@@ -41,7 +41,7 @@ public class MultiObjectDeleteException extends S3Exception {
   private final List<S3Error> errors;
 
   public MultiObjectDeleteException(List<S3Error> errors) {
-    super(builder().message(errors.toString()));
+    super(builder().message(errors.toString()).statusCode(200));
     this.errors = errors;
   }
 

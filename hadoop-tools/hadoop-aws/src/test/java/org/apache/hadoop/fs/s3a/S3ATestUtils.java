@@ -61,7 +61,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.functional.CallableRaisingIOE;
 import org.apache.hadoop.util.functional.FutureIO;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Assume;

@@ -23,8 +23,6 @@ import java.net.URI;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.amazonaws.auth.AWSCredentials;
-
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -153,22 +151,5 @@ public abstract class AbstractSessionCredentialsProvider
   @VisibleForTesting
   public IOException getInitializationException() {
     return initializationException;
-  }
-
-  /**
-   * A special set of null credentials which are not the anonymous class.
-   * This will be interpreted as "this provider has no credentials to offer",
-   * rather than an explicit error or anonymous access.
-   */
-  protected static final class NoCredentials implements AWSCredentials {
-    @Override
-    public String getAWSAccessKeyId() {
-      return null;
-    }
-
-    @Override
-    public String getAWSSecretKey() {
-      return null;
-    }
   }
 }

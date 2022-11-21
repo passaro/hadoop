@@ -25,8 +25,6 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.slf4j.Logger;

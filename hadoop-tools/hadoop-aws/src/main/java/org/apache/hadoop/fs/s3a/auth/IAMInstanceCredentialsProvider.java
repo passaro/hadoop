@@ -21,10 +21,6 @@ package org.apache.hadoop.fs.s3a.auth;
 import java.io.Closeable;
 import java.io.IOException;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider;

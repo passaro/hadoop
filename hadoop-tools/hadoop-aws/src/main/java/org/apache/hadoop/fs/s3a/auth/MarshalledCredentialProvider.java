@@ -21,7 +21,6 @@ package org.apache.hadoop.fs.s3a.auth;
 import java.io.IOException;
 import java.net.URI;
 
-import com.amazonaws.auth.AWSCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 
 import org.apache.hadoop.classification.InterfaceAudience;

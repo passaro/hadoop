@@ -23,7 +23,6 @@ import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentialsProvider;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -90,7 +89,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.hadoop.fs.s3a.Constants.*;
 import static org.apache.hadoop.fs.s3a.impl.ErrorTranslation.isUnknownBucket;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.*;
-import static org.apache.hadoop.fs.s3a.impl.MultiObjectDeleteSupport.translateDeleteException;
 import static org.apache.hadoop.io.IOUtils.cleanupWithLogger;
 import static org.apache.hadoop.util.functional.RemoteIterators.filteringRemoteIterator;
 
@@ -311,8 +309,8 @@ public final class S3AUtils {
       case SC_200_OK:
         if (exception instanceof MultiObjectDeleteException) {
           // failure during a bulk delete
-          return translateDeleteException(message,
-              (MultiObjectDeleteException) exception);
+          return ((MultiObjectDeleteException) exception)
+              .translateException(message);
         }
         // other 200: FALL THROUGH
 

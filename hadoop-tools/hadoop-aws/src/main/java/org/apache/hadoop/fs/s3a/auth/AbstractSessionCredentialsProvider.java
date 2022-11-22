@@ -152,4 +152,22 @@ public abstract class AbstractSessionCredentialsProvider
   public IOException getInitializationException() {
     return initializationException;
   }
+
+  /**
+   * A special set of null credentials which are not the anonymous class.
+   * This will be interpreted as "this provider has no credentials to offer",
+   * rather than an explicit error or anonymous access.
+   */
+  protected static final class NoCredentials implements AwsCredentials {
+    @Override
+    public String accessKeyId() {
+      return null;
+    }
+
+    @Override
+    public String secretAccessKey() {
+      return null;
+    }
+  }
+
 }

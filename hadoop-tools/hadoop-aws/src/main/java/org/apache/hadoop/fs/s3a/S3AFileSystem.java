@@ -242,8 +242,8 @@ import static org.apache.hadoop.fs.s3a.impl.InternalConstants.ARN_BUCKET_OPTION;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.CSE_PADDING_LENGTH;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.DEFAULT_UPLOAD_PART_COUNT_LIMIT;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.DELETE_CONSIDERED_IDEMPOTENT;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_403;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_403_FORBIDDEN;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404_NOT_FOUND;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.UPLOAD_PART_COUNT_LIMIT;
 import static org.apache.hadoop.fs.s3a.impl.NetworkBinding.fixBucketRegion;
 import static org.apache.hadoop.fs.s3a.impl.NetworkBinding.logDnsLookup;
@@ -864,8 +864,9 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
                     .build());
               } catch (AwsServiceException ex) {
                 int statusCode = ex.statusCode();
-                if (statusCode == SC_404 ||
-                    (statusCode == SC_403 && ex.getMessage().contains(AP_INACCESSIBLE))) {
+                if (statusCode == SC_404_NOT_FOUND ||
+                    (statusCode == SC_403_FORBIDDEN &&
+                        ex.getMessage().contains(AP_INACCESSIBLE))) {
                   return false;
                 }
               }
@@ -3741,7 +3742,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         // no file at that path...the remaining checks will be needed.
         // But: an empty bucket is also a 404, so check for that
         // and fail.
-        if (e.statusCode() != SC_404 || isUnknownBucket(e)) {
+        if (e.statusCode() != SC_404_NOT_FOUND || isUnknownBucket(e)) {
           throw translateException("getFileStatus", path, e);
         }
       } catch (SdkException e) {
@@ -3788,7 +3789,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
           return new S3AFileStatus(Tristate.TRUE, path, username);
         }
       } catch (AwsServiceException e) {
-        if (e.statusCode() != SC_404 || isUnknownBucket(e)) {
+        if (e.statusCode() != SC_404_NOT_FOUND || isUnknownBucket(e)) {
           throw translateException("getFileStatus", path, e);
         }
       } catch (SdkException e) {

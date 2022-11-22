@@ -21,7 +21,6 @@ package org.apache.hadoop.fs.s3a;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
-import com.amazonaws.auth.AWSCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 
 import java.net.URI;

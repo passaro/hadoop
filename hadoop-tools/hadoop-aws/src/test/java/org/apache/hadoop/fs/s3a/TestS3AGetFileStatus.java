@@ -30,15 +30,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.hadoop.fs.contract.ContractTestUtils;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;

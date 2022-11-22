@@ -18,13 +18,20 @@
 
 package org.apache.hadoop.fs.s3a;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import software.amazon.awssdk.services.s3.model.S3Error;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
+
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_200_OK;
 
 /**
  * Exception raised in {@link S3AFileSystem#deleteObjects} when
@@ -38,12 +45,61 @@ import org.apache.hadoop.classification.InterfaceStability;
 @InterfaceStability.Unstable
 public class MultiObjectDeleteException extends S3Exception {
 
+  private static final Logger LOG = LoggerFactory.getLogger(
+      MultiObjectDeleteException.class);
+
+  /**
+   * This is the exception exit code if access was denied on a delete.
+   * {@value}.
+   */
+  public static final String ACCESS_DENIED = "AccessDenied";
+
   private final List<S3Error> errors;
 
   public MultiObjectDeleteException(List<S3Error> errors) {
-    super(builder().message(errors.toString()));
+    super(builder().message(errors.toString()).statusCode(SC_200_OK));
     this.errors = errors;
   }
 
   public List<S3Error> errors() { return errors; }
+
+  /**
+   * A {@code MultiObjectDeleteException} is raised if one or more
+   * paths listed in a bulk DELETE operation failed.
+   * The top-level exception is therefore just "something wasn't deleted",
+   * but doesn't include the what or the why.
+   * This translation will extract an AccessDeniedException if that's one of
+   * the causes, otherwise grabs the status code and uses it in the
+   * returned exception.
+   * @param message text for the exception
+   * @return an IOE with more detail.
+   */
+  public IOException translateException(final String message) {
+    LOG.info("Bulk delete operation failed to delete all objects;"
+            + " failure count = {}",
+        errors().size());
+    final StringBuilder result = new StringBuilder(
+        errors().size() * 256);
+    result.append(message).append(": ");
+    String exitCode = "";
+    for (S3Error error : errors()) {
+      String code = error.code();
+      String item = String.format("%s: %s%s: %s%n", code, error.key(),
+          (error.versionId() != null
+              ? (" (" + error.versionId() + ")")
+              : ""),
+          error.message());
+      LOG.info(item);
+      result.append(item);
+      if (exitCode == null || exitCode.isEmpty() || ACCESS_DENIED.equals(code)) {
+        exitCode = code;
+      }
+    }
+    if (ACCESS_DENIED.equals(exitCode)) {
+      return (IOException) new AccessDeniedException(result.toString())
+          .initCause(this);
+    } else {
+      return new AWSS3IOException(result.toString(), this);
+    }
+  }
 }

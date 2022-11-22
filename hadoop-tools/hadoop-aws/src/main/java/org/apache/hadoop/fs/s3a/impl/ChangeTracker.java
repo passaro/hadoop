@@ -40,6 +40,7 @@ import org.apache.hadoop.fs.s3a.RemoteFileChangedException;
 import org.apache.hadoop.fs.s3a.S3ObjectAttributes;
 import org.apache.hadoop.fs.s3a.statistics.ChangeTrackerStatistics;
 
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_412_PRECONDITION_FAILED;
 import static org.apache.hadoop.util.Preconditions.checkNotNull;
 
 /**
@@ -56,8 +57,6 @@ public class ChangeTracker {
   private static final Logger LOG =
       LoggerFactory.getLogger(ChangeTracker.class);
 
-  /** {@code 412 Precondition Failed} (HTTP/1.1 - RFC 2616) */
-  public static final int SC_PRECONDITION_FAILED = 412;
   public static final String CHANGE_REPORTED_BY_S3 = "Change reported by S3";
 
   /** Policy to use. */
@@ -237,7 +236,7 @@ public class ChangeTracker {
       // TODO: Verify whether this is fixed in SDK v2.
       // In SDK v1, this wasn't really going to be hit due to
       // https://github.com/aws/aws-sdk-java/issues/1644
-      if (serviceException.statusCode() == SC_PRECONDITION_FAILED) {
+      if (serviceException.statusCode() == SC_412_PRECONDITION_FAILED) {
         versionMismatches.versionMismatchError();
         throw new RemoteFileChangedException(uri, operation, String.format(
             RemoteFileChangedException.PRECONDITIONS_FAILED

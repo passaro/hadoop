@@ -40,6 +40,7 @@ import org.apache.hadoop.test.HadoopTestBase;
 import static org.apache.hadoop.fs.s3a.impl.ChangeDetectionPolicy.CHANGE_DETECTED;
 import static org.apache.hadoop.fs.s3a.impl.ChangeDetectionPolicy.createPolicy;
 import static org.apache.hadoop.fs.s3a.impl.ChangeTracker.CHANGE_REPORTED_BY_S3;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_412_PRECONDITION_FAILED;
 import static org.apache.hadoop.test.LambdaTestUtils.intercept;
 
 /**
@@ -252,7 +253,7 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     AwsServiceException awsException =
         AwsServiceException.builder()
             .message("aws exception")
-            .statusCode(ChangeTracker.SC_PRECONDITION_FAILED)
+            .statusCode(SC_412_PRECONDITION_FAILED)
             .build();
     expectChangeException(tracker, awsException, "copy",
         RemoteFileChangedException.PRECONDITIONS_FAILED);

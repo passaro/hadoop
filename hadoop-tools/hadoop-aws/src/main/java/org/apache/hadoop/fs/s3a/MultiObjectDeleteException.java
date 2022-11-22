@@ -26,6 +26,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_200_OK;
+
 /**
  * Exception raised in {@link S3AFileSystem#deleteObjects} when
  * one or more of the keys could not be deleted.
@@ -41,7 +43,7 @@ public class MultiObjectDeleteException extends S3Exception {
   private final List<S3Error> errors;
 
   public MultiObjectDeleteException(List<S3Error> errors) {
-    super(builder().message(errors.toString()).statusCode(200));
+    super(builder().message(errors.toString()).statusCode(SC_200_OK));
     this.errors = errors;
   }
 

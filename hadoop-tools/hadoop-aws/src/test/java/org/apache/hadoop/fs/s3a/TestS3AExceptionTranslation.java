@@ -21,7 +21,14 @@ package org.apache.hadoop.fs.s3a;
 import static org.apache.hadoop.fs.s3a.Constants.*;
 import static org.apache.hadoop.fs.s3a.S3ATestUtils.*;
 import static org.apache.hadoop.fs.s3a.S3AUtils.*;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_301_MOVED_PERMANENTLY;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_400_BAD_REQUEST;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_401_UNAUTHORIZED;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_403_FORBIDDEN;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404_NOT_FOUND;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_410_GONE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_416_RANGE_NOT_SATISFIABLE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_500_INTERNAL_SERVER_ERROR;
 import static org.junit.Assert.*;
 
 import java.io.EOFException;
@@ -62,13 +69,13 @@ public class TestS3AExceptionTranslation {
   @Test
   public void test301ContainsEndpoint() throws Exception {
     String bucket = "bucket.s3-us-west-2.amazonaws.com";
-    int sc301 = 301;
-    S3Exception s3Exception = createS3Exception("wrong endpoint", sc301,
+    S3Exception s3Exception = createS3Exception("wrong endpoint",
+        SC_301_MOVED_PERMANENTLY,
         Collections.singletonMap(S3AUtils.ENDPOINT_KEY,
             bucket));
     AWSRedirectException ex = verifyTranslated(
         AWSRedirectException.class, s3Exception);
-    assertStatusCode(sc301, ex);
+    assertStatusCode(SC_301_MOVED_PERMANENTLY, ex);
     assertNotNull(ex.getMessage());
 
     assertContained(ex.getMessage(), bucket);
@@ -90,17 +97,17 @@ public class TestS3AExceptionTranslation {
 
   @Test
   public void test400isBad() throws Exception {
-    verifyTranslated(400, AWSBadRequestException.class);
+    verifyTranslated(SC_400_BAD_REQUEST, AWSBadRequestException.class);
   }
 
   @Test
   public void test401isNotPermittedFound() throws Exception {
-    verifyTranslated(401, AccessDeniedException.class);
+    verifyTranslated(SC_401_UNAUTHORIZED, AccessDeniedException.class);
   }
 
   @Test
   public void test403isNotPermittedFound() throws Exception {
-    verifyTranslated(403, AccessDeniedException.class);
+    verifyTranslated(SC_403_FORBIDDEN, AccessDeniedException.class);
   }
 
   /**
@@ -108,7 +115,7 @@ public class TestS3AExceptionTranslation {
    */
   @Test
   public void test404isNotFound() throws Exception {
-    verifyTranslated(SC_404, FileNotFoundException.class);
+    verifyTranslated(SC_404_NOT_FOUND, FileNotFoundException.class);
   }
 
   /**
@@ -117,7 +124,7 @@ public class TestS3AExceptionTranslation {
   @Test
   public void testUnknownBucketException() throws Exception {
     S3Exception ex404 = createS3Exception(b -> b
-        .statusCode(SC_404)
+        .statusCode(SC_404_NOT_FOUND)
         .awsErrorDetails(AwsErrorDetails.builder()
             .errorCode(ErrorTranslation.AwsErrorCodes.E_NO_SUCH_BUCKET)
             .build()));
@@ -128,12 +135,12 @@ public class TestS3AExceptionTranslation {
 
   @Test
   public void test410isNotFound() throws Exception {
-    verifyTranslated(410, FileNotFoundException.class);
+    verifyTranslated(SC_410_GONE, FileNotFoundException.class);
   }
 
   @Test
   public void test416isEOF() throws Exception {
-    verifyTranslated(416, EOFException.class);
+    verifyTranslated(SC_416_RANGE_NOT_SATISFIABLE, EOFException.class);
   }
 
   @Test
@@ -150,12 +157,12 @@ public class TestS3AExceptionTranslation {
     // service exception of no known type
     AwsServiceException ase = AwsServiceException.builder()
         .message("unwind")
-        .statusCode(500)
+        .statusCode(SC_500_INTERNAL_SERVER_ERROR)
         .build();
     AWSServiceIOException ex = verifyTranslated(
         AWSStatus500Exception.class,
         ase);
-    assertStatusCode(500, ex);
+    assertStatusCode(SC_500_INTERNAL_SERVER_ERROR, ex);
   }
 
   protected void assertStatusCode(int expected, AWSServiceIOException ex) {

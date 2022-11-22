@@ -83,12 +83,12 @@ import static org.apache.hadoop.fs.s3a.Constants.CENTRAL_ENDPOINT;
 import static org.apache.hadoop.fs.s3a.Constants.DEFAULT_SECURE_CONNECTIONS;
 import static org.apache.hadoop.fs.s3a.Constants.EXPERIMENTAL_AWS_INTERNAL_THROTTLING;
 import static org.apache.hadoop.fs.s3a.Constants.EXPERIMENTAL_AWS_INTERNAL_THROTTLING_DEFAULT;
-import static org.apache.hadoop.fs.s3a.Constants.HTTP_STATUS_CODE_MOVED_PERMANENTLY;
 import static org.apache.hadoop.fs.s3a.Constants.S3_ENCRYPTION_KEY;
 import static org.apache.hadoop.fs.s3a.Constants.SECURE_CONNECTIONS;
 import static org.apache.hadoop.fs.s3a.S3AUtils.getEncryptionAlgorithm;
 import static org.apache.hadoop.fs.s3a.S3AUtils.getS3EncryptionKey;
 import static org.apache.hadoop.fs.s3a.S3AUtils.translateException;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_301_MOVED_PERMANENTLY;
 
 /**
  * The default {@link S3ClientFactory} implementation.
@@ -584,7 +584,7 @@ public class DefaultS3ClientFactory extends Configured
       return Region.of(
           headBucketResponse.sdkHttpResponse().headers().get(BUCKET_REGION_HEADER).get(0));
     } catch (S3Exception exception) {
-      if (exception.statusCode() == HTTP_STATUS_CODE_MOVED_PERMANENTLY) {
+      if (exception.statusCode() == SC_301_MOVED_PERMANENTLY) {
         List<String> bucketRegion =
             exception.awsErrorDetails().sdkHttpResponse().headers().get(BUCKET_REGION_HEADER);
         return Region.of(bucketRegion.get(0));

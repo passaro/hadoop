@@ -20,7 +20,7 @@ package org.apache.hadoop.fs.s3a.impl;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404_NOT_FOUND;
 
 /**
  * Translate from AWS SDK-wrapped exceptions into IOExceptions with
@@ -50,7 +50,7 @@ public class ErrorTranslation {
    * remote bucket is unknown.
    */
   public static boolean isUnknownBucket(AwsServiceException e) {
-    return e.statusCode() == SC_404
+    return e.statusCode() == SC_404_NOT_FOUND
         && AwsErrorCodes.E_NO_SUCH_BUCKET.equals(e.awsErrorDetails().errorCode());
   }
 
@@ -63,7 +63,7 @@ public class ErrorTranslation {
    * HEAD request returned 404 but the bucket was there.
    */
   public static boolean isObjectNotFound(AwsServiceException e) {
-    return e.statusCode() == SC_404 && !isUnknownBucket(e);
+    return e.statusCode() == SC_404_NOT_FOUND && !isUnknownBucket(e);
   }
 
   /**

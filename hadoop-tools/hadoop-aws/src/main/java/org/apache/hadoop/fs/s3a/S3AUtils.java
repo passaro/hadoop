@@ -90,6 +90,20 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.hadoop.fs.s3a.Constants.*;
 import static org.apache.hadoop.fs.s3a.impl.ErrorTranslation.isUnknownBucket;
 import static org.apache.hadoop.fs.s3a.impl.InternalConstants.CSE_PADDING_LENGTH;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_200_OK;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_301_MOVED_PERMANENTLY;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_307_TEMPORARY_REDIRECT;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_400_BAD_REQUEST;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_401_UNAUTHORIZED;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_403_FORBIDDEN;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404_NOT_FOUND;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_405_METHOD_NOT_ALLOWED;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_410_GONE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_416_RANGE_NOT_SATISFIABLE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_443_NO_RESPONSE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_444_NO_RESPONSE;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_500_INTERNAL_SERVER_ERROR;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_503_SERVICE_UNAVAILABLE;
 import static org.apache.hadoop.fs.s3a.impl.MultiObjectDeleteSupport.translateDeleteException;
 import static org.apache.hadoop.io.IOUtils.cleanupWithLogger;
 import static org.apache.hadoop.util.functional.RemoteIterators.filteringRemoteIterator;
@@ -228,8 +242,8 @@ public final class S3AUtils {
       }
       switch (status) {
 
-      case 301:
-      case 307:
+      case SC_301_MOVED_PERMANENTLY:
+      case SC_307_TEMPORARY_REDIRECT:
         if (s3Exception != null) {
           // TODO: Can we get the endpoint in v2?
           // Maybe not: https://github.com/aws/aws-sdk-java-v2/issues/3048
@@ -247,19 +261,19 @@ public final class S3AUtils {
         }
         break;
 
-      case 400:
+      case SC_400_BAD_REQUEST:
         ioe = new AWSBadRequestException(message, ase);
         break;
 
       // permissions
-      case 401:
-      case 403:
+      case SC_401_UNAUTHORIZED:
+      case SC_403_FORBIDDEN:
         ioe = new AccessDeniedException(path, null, message);
         ioe.initCause(ase);
         break;
 
       // the object isn't there
-      case 404:
+      case SC_404_NOT_FOUND:
         if (isUnknownBucket(ase)) {
           // this is a missing bucket
           ioe = new UnknownStoreException(path, message, ase);
@@ -272,20 +286,20 @@ public final class S3AUtils {
 
       // this also surfaces sometimes and is considered to
       // be ~ a not found exception.
-      case 410:
+      case SC_410_GONE:
         ioe = new FileNotFoundException(message);
         ioe.initCause(ase);
         break;
 
       // method not allowed; seen on S3 Select.
       // treated as a bad request
-      case 405:
+      case SC_405_METHOD_NOT_ALLOWED:
         ioe = new AWSBadRequestException(message, s3Exception);
         break;
 
       // out of range. This may happen if an object is overwritten with
       // a shorter one while it is being read.
-      case 416:
+      case SC_416_RANGE_NOT_SATISFIABLE:
         ioe = new EOFException(message);
         ioe.initCause(ase);
         break;
@@ -293,22 +307,22 @@ public final class S3AUtils {
       // this has surfaced as a "no response from server" message.
       // so rare we haven't replicated it.
       // Treating as an idempotent proxy error.
-      case 443:
-      case 444:
+      case SC_443_NO_RESPONSE:
+      case SC_444_NO_RESPONSE:
         ioe = new AWSNoResponseException(message, ase);
         break;
 
       // throttling
-      case 503:
+      case SC_503_SERVICE_UNAVAILABLE:
         ioe = new AWSServiceThrottledException(message, ase);
         break;
 
       // internal error
-      case 500:
+      case SC_500_INTERNAL_SERVER_ERROR:
         ioe = new AWSStatus500Exception(message, ase);
         break;
 
-      case 200:
+      case SC_200_OK:
         if (exception instanceof MultiObjectDeleteException) {
           // failure during a bulk delete
           return translateDeleteException(message,

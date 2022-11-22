@@ -1240,9 +1240,4 @@ public final class Constants {
    * The bucket region header.
    */
   public static final String BUCKET_REGION_HEADER = "x-amz-bucket-region";
-
-  /**
-   * Status code for moved permanently.
-   */
-  public static final int HTTP_STATUS_CODE_MOVED_PERMANENTLY = 301;
 }

@@ -21,14 +21,7 @@ package org.apache.hadoop.fs.s3a;
 import static org.apache.hadoop.fs.s3a.Constants.*;
 import static org.apache.hadoop.fs.s3a.S3ATestUtils.*;
 import static org.apache.hadoop.fs.s3a.S3AUtils.*;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_301_MOVED_PERMANENTLY;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_400_BAD_REQUEST;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_401_UNAUTHORIZED;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_403_FORBIDDEN;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_404_NOT_FOUND;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_410_GONE;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_416_RANGE_NOT_SATISFIABLE;
-import static org.apache.hadoop.fs.s3a.impl.InternalConstants.SC_500_INTERNAL_SERVER_ERROR;
+import static org.apache.hadoop.fs.s3a.impl.InternalConstants.*;
 import static org.junit.Assert.*;
 
 import java.io.EOFException;

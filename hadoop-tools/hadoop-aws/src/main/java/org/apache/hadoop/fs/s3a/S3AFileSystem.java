@@ -574,9 +574,6 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
       // the encryption algorithms)
       bindAWSClient(name, delegationTokensEnabled);
 
-      initTransferManager();
-
-
       // This initiates a probe against S3 for the bucket existing.
       doBucketProbing();
 
@@ -966,8 +963,8 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         ? conf.getTrimmed(ENDPOINT, DEFAULT_ENDPOINT)
         : accessPoint.getEndpoint();
 
-    S3ClientFactory.S3ClientCreationParameters parameters = null;
-    parameters = new S3ClientFactory.S3ClientCreationParameters()
+    S3ClientFactory.S3ClientCreationParameters parameters =
+        new S3ClientFactory.S3ClientCreationParameters()
         .withCredentialSet(credentials)
         .withPathUri(name)
         .withEndpoint(endpoint)
@@ -984,6 +981,8 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
     s3AsyncClient = ReflectionUtils.newInstance(s3ClientFactoryClass, conf)
         .createS3AsyncClient(getUri(),
             parameters);
+
+    initTransferManager();
   }
 
   /**
@@ -1157,18 +1156,13 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
   }
 
   private void initTransferManager() {
+    // TODO: move to client factory?
     transferManager = S3TransferManager.builder()
-        .s3ClientConfiguration(clientConfiguration -> {
-          // TODO: This partSize check is required temporarily as some of the unit tests
-          //  (TestStagingCommitter) set the S3Client using setAmazonS3Client() at which point
-          //  partSize = 0, which gives a validation error with the new TM. The fix for this is
-          //  probably in the tests and will be updated separately.
-          if (partSize > 0) {
-            clientConfiguration.minimumPartSizeInBytes(partSize);
-          }
-
-          // TODO: other configuration options? e.g. credential providers
-        })
+        .s3ClientConfiguration(clientConfiguration ->
+            // TODO: other configuration options?
+            clientConfiguration
+                .minimumPartSizeInBytes(partSize)
+                .credentialsProvider(credentials))
         .transferConfiguration(transferConfiguration ->
             transferConfiguration.executor(unboundedThreadPool)) // TODO: double-check
         .build();
@@ -1294,14 +1288,6 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
     Preconditions.checkNotNull(client, "clientV2");
     LOG.debug("Setting S3V2 client to {}", client);
     s3Client = client;
-
-    // TODO: still relevant in v2?
-    // Need to use a new TransferManager that uses the new client.
-    // Also, using a new TransferManager requires a new threadpool as the old
-    // TransferManager will shut the thread pool down when it is garbage
-    // collected.
-    initThreadPools(getConf());
-    initTransferManager();
   }
 
   /**

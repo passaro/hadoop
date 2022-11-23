@@ -137,14 +137,17 @@ public final class InternalConstants {
   /** 410 status code: Gone. */
   public static final int SC_410_GONE = 410;
 
+  /** 412 status code: Precondition Failed. */
+  public static final int SC_412_PRECONDITION_FAILED = 412;
+
+  /** 416 status code: Range Not Satisfiable. */
+  public static final int SC_416_RANGE_NOT_SATISFIABLE = 416;
+
   /** 443 status code: No Response (unofficial). */
   public static final int SC_443_NO_RESPONSE = 443;
 
   /** 444 status code: No Response (unofficial). */
   public static final int SC_444_NO_RESPONSE = 444;
-
-  /** 416 status code: Range Not Satisfiable. */
-  public static final int SC_416_RANGE_NOT_SATISFIABLE = 416;
 
   /** 500 status code: Internal Server Error. */
   public static final int SC_500_INTERNAL_SERVER_ERROR = 500;

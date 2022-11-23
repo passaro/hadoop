@@ -103,3 +103,37 @@ is now performed by a `FailureInjectionInterceptor` (see
 registered on the default client by `InconsistentS3CClientFactory`. 
 `InconsistentAmazonS3CClient` has been removed. No changes to the user configuration are required.
 
+
+## Select
+
+In SDK v2, Handling of select requests has changes significantly since SelectObjectContent is 
+only supported on the new async S3 client. In previous versions, the response to a 
+SelectObjectContent request exposed the results in a `SelectRecordsInputStream`, which S3A 
+could wrap in `SelectInputStream`. In v2, instead, the response needs to be handled by an object
+implementing `SelectObjectContentResponseHandler`, which can receive an async publisher of
+the "events" returned by the service (`SdkPublisher<SelectObjectContentEventStream>`). 
+
+In order to adapt the new API in S3A, three new classes have been introduced in 
+`org.apache.hadoop.fs.s3a.select`:
+
+* `SelectObjectContentHelper`: wraps the `selectObjectContent()` call, provides a custom 
+  response handler to receive the response, and exposes a `SelectEventStreamPublisher`. 
+* `SelectEventStreamPublisher`: a publisher of select event stream events, which handles the 
+  future returned by the select call and wraps the original publisher. This class provides
+  a `toRecordsInputStream()` method which returns an input stream containing the results, 
+  reproducing the behaviour of the old `SelectRecordsInputStream`.
+* `BlockingEnumeration`: an adapter which consumes elements received from a publisher and
+  exposes them through an `Enumeration` interface. Used in 
+  `SelectEventStreamPublisher.toRecordsInputStream()` to adapt the event publisher into
+  an enumeration of input streams, eventually passed to a `SequenceInputStream`.
+
+
+## GetObject
+
+* Previously, `S3AInputStream` had to keep a reference to the `S3Object` while holding the wrapped
+  `S3ObjectInputStream`. When upgraded to SDK v2, it can simply wrap new 
+  `ResponseInputStream<GetObjectResponse>`, which handles lifetime correctly. Same applies 
+  to `SDKStreamDrainer`. Furthermore, the map in `S3ARemoteObject` associating input streams and
+  `S3Object` instances is no longer needed.
+* The range header on a `GetObject` request is now specified as a string, rather than a 
+  `start`-`end` pair. `S3AUtils.formatRange` was introduced to format it.

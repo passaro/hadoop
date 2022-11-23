@@ -39,7 +39,8 @@ Switching to the new mechanism in S3A brings:
   under "Interceptor Registration", which could make it redundant.
 
 In the Transfer Manager, `TransferListener` replaces `TransferStateChangeListener`. S3A code
-has been updated, but registration of the new listeners is currently commented out because 
+has been updated and `AuditManagerS3A` implementations now provide an instance of the former to 
+switch to the active span, but registration of the new listeners is currently commented out because 
 it causes an incompatibility issue with the internal logger, resulting in `NoSuchMethodError`s,
 at least in the current TransferManager Preview release. 
 
@@ -66,9 +67,10 @@ Note that none of the timing metrics (`*_DURATION`) are currently collected in S
 
 ## DeleteObject
 
-In SDK v2, bulk delete does not throw on partial failure: the response contains a list of errors. 
-A new `MultiObjectDeleteException` class was introduced and is thrown when appropriate to
-reproduce the previous behaviour.
+In SDK v1, bulk delete would throw a `com.amazonaws.services.s3.model.MultiObjectDeleteException`
+in case of partial failure. In v2, instead, it returns a `DeleteObjectsResponse` containing a 
+list of errors. A new `MultiObjectDeleteException` class was introduced in 
+`org.apache.hadoop.fs.s3a` and is thrown when appropriate to reproduce the previous behaviour.
 * `MultiObjectDeleteSupport.translateDeleteException` was moved into `MultiObjectDeleteException`.
 * `ObjectIdentifier` replaces DeleteObjectsRequest.KeyVersion.
 

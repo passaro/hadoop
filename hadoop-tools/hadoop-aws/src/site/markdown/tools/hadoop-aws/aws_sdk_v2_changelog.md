@@ -193,8 +193,13 @@ in ` multipartUploadEncryptionParameters`.
 
 ### GetObject
 
-* Previously, `S3AInputStream` had to keep a reference to the `S3Object` while holding the wrapped
-  `S3ObjectInputStream`. When upgraded to SDK v2, it can simply wrap new
+* Previously, GetObject returned a `S3Object` response which exposed its content in a 
+  `S3ObjectInputStream` through the `getObjectContent()` method. In SDK v2, the response is 
+  directly a `ResponseInputStream<GetObjectResponse>` with the content, while the 
+  `GetObjectResponse` instance can be retrieved by calling `response()` on it.
+* The above change simplifies managing the lifetime of the response input stream. In v1, 
+  `S3AInputStream` had to keep a reference to the `S3Object` while holding the wrapped
+  `S3ObjectInputStream`. When upgraded to SDK v2, it can simply wrap the new
   `ResponseInputStream<GetObjectResponse>`, which handles lifetime correctly. Same applies
   to `SDKStreamDrainer`. Furthermore, the map in `S3ARemoteObject` associating input streams and
   `S3Object` instances is no longer needed.
@@ -228,10 +233,12 @@ In order to adapt the new API in S3A, three new classes have been introduced in
   future returned by the select call and wraps the original publisher. This class provides
   a `toRecordsInputStream()` method which returns an input stream containing the results,
   reproducing the behaviour of the old `SelectRecordsInputStream`.
-* `BlockingEnumeration`: an adapter which consumes elements received from a publisher and
+* `BlockingEnumeration`: an adapter which lazily requests new elements from the publisher and 
   exposes them through an `Enumeration` interface. Used in
   `SelectEventStreamPublisher.toRecordsInputStream()` to adapt the event publisher into
   an enumeration of input streams, eventually passed to a `SequenceInputStream`.
+  Note that the "lazy" behaviour means that new elements are requested only on `read()` calls on
+  the input stream.
 
   
 
